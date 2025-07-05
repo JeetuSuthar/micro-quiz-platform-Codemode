@@ -6,9 +6,6 @@ A modern, responsive quiz application built with **Next.js 14** that demonstrate
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-## 🚀 Live Demo
-
-**Production URL:** [https://micro-quiz-platform-codemode.vercel.app](https://micro-quiz-platform-codemode.vercel.app)
 
 ## 📋 Table of Contents
 
