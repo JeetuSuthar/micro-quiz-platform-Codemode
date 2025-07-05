@@ -33,7 +33,7 @@ type QuizAction =
   | { type: "SELECT_ANSWER"; answer: number }
   | { type: "SHOW_FEEDBACK" }
   | { type: "NEXT_QUESTION" }
-  | { type: "COMPLETE_QUIZ" }
+  | { type: "COMPLETE_QUIZ"; score: number }
   | { type: "RESET_QUIZ" }
 
 function quizReducer(state: QuizState, action: QuizAction): QuizState {
@@ -58,11 +58,6 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       const isLastQuestion = state.currentQuestionIndex === state.answers.length - 1
 
       if (isLastQuestion) {
-        const score = state.answers.reduce((acc, answer, index) => {
-          // We need access to questions here, so we'll calculate score in COMPLETE_QUIZ
-          return acc
-        }, 0)
-
         return {
           ...state,
           isCompleted: true,
@@ -81,7 +76,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return {
         ...state,
         isCompleted: true,
-        score: action.score || 0,
+        score: action.score,
       }
 
     case "RESET_QUIZ":
@@ -128,16 +123,18 @@ export default function QuizClient({ quiz }: Props) {
 
   const handleNextQuestion = () => {
     if (state.currentQuestionIndex === quiz.questions.length - 1) {
-      // Calculate final score
-      const score = state.answers.reduce((acc, answer, index) => {
-        if (answer === quiz.questions[index].correctAnswer) {
+      // Calculate final score - handle null values properly
+      const score = state.answers.reduce((acc: number, answer: number | null, index: number) => {
+        // Only count if answer is not null and matches correct answer
+        if (answer !== null && answer === quiz.questions[index].correctAnswer) {
           return acc + 1
         }
         return acc
-      }, 0)
+      }, 0) // Start with 0, not null
 
-      // Add current answer to score if correct
-      const finalScore = state.selectedAnswer === currentQuestion.correctAnswer ? score + 1 : score
+      // Add current answer to score if correct and not null
+      const finalScore =
+        state.selectedAnswer !== null && state.selectedAnswer === currentQuestion.correctAnswer ? score + 1 : score
 
       dispatch({ type: "COMPLETE_QUIZ", score: finalScore })
     } else {
