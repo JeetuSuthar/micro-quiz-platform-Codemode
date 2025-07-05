@@ -26,24 +26,48 @@ interface Props {
 
 // This function demonstrates Server-Side Rendering (SSR) - equivalent to getServerSideProps
 async function getQuizzesByCategory(categoryId: string): Promise<Quiz[]> {
-  // For SSR, we'll use the mock data directly to avoid fetch issues
-  // In a real application, you might query a database here
-  const { getQuizzesByCategory } = await import("@/lib/mock-data")
+  try {
+    // Use absolute URL for server-side fetching
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
-  // Simulate async operation for demonstration of SSR
-  await new Promise((resolve) => setTimeout(resolve, 200))
+    const response = await fetch(`${baseUrl}/api/quizzes/${categoryId}`, {
+      cache: "no-store", // SSR behavior - fresh data on each request
+    })
 
-  return getQuizzesByCategory(categoryId)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error(`Failed to fetch quizzes for category ${categoryId}:`, error)
+    return []
+  }
 }
 
 async function getCategory(categoryId: string): Promise<Category | null> {
-  // For SSR, we'll use the mock data directly
-  const { getCategoryById } = await import("@/lib/mock-data")
+  try {
+    // Use absolute URL for server-side fetching
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
-  // Simulate async operation
-  await new Promise((resolve) => setTimeout(resolve, 100))
+    const response = await fetch(`${baseUrl}/api/categories`, {
+      cache: "no-store", // SSR behavior
+    })
 
-  return getCategoryById(categoryId) || null
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const categories = await response.json()
+    return categories.find((cat: Category) => cat.id === categoryId) || null
+  } catch (error) {
+    console.error(`Failed to fetch category ${categoryId}:`, error)
+    return null
+  }
 }
 
 // Generate metadata dynamically based on category

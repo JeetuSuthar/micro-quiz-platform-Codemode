@@ -19,14 +19,26 @@ interface Category {
 
 // This function demonstrates Static Site Generation (SSG) - equivalent to getStaticProps
 async function getCategories(): Promise<Category[]> {
-  // For SSG, we'll use the mock data directly to avoid fetch issues during build
-  // In a real application, you might use a database connection here
-  const { categories } = await import("@/lib/mock-data")
+  try {
+    // Use absolute URL for server-side fetching during build
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
-  // Simulate async operation for demonstration
-  await new Promise((resolve) => setTimeout(resolve, 100))
+    const response = await fetch(`${baseUrl}/api/categories`, {
+      cache: "force-cache", // SSG behavior - cache at build time
+    })
 
-  return categories
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error("Failed to fetch categories:", error)
+    // Return empty array if API fails - let the UI handle empty state
+    return []
+  }
 }
 
 export default async function HomePage() {
@@ -56,34 +68,42 @@ export default async function HomePage() {
         {/* Categories Grid */}
         <section className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Choose Your Category</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/quizzes/${category.id}`}
-                className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6"
-              >
-                <div className="text-center">
-                  <div className="mb-4 flex justify-center">
-                    <Image
-                      src={`/${category.id}-icon.png`}
-                      alt={`${category.name} icon`}
-                      width={60}
-                      height={60}
-                      className="rounded-lg group-hover:scale-110 transition-transform duration-300"
-                    />
+          {categories.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📚</div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">Categories Loading...</h3>
+              <p className="text-gray-600">Please refresh the page if categories don't appear.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/quizzes/${category.id}`}
+                  className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6"
+                >
+                  <div className="text-center">
+                    <div className="mb-4 flex justify-center">
+                      <Image
+                        src={`/${category.id}-icon.png`}
+                        alt={`${category.name} icon`}
+                        width={60}
+                        height={60}
+                        className="rounded-lg group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3">{category.description}</p>
+                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
+                      {category.quizCount} Quiz{category.quizCount !== 1 ? "es" : ""}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3">{category.description}</p>
-                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
-                    {category.quizCount} Quiz{category.quizCount !== 1 ? "es" : ""}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Features Section */}

@@ -27,14 +27,25 @@ interface Props {
 
 // Server-side data fetching for initial quiz data - equivalent to getServerSideProps
 async function getQuiz(quizId: string): Promise<Quiz | null> {
-  // For server-side rendering, we'll use the mock data directly
-  // In a real application, you might query a database here
-  const { getQuizById } = await import("@/lib/mock-data")
+  try {
+    // Use absolute URL for server-side fetching
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
-  // Simulate async operation for demonstration
-  await new Promise((resolve) => setTimeout(resolve, 300))
+    const response = await fetch(`${baseUrl}/api/quiz/${quizId}`, {
+      cache: "no-store", // Fresh data for each quiz attempt
+    })
 
-  return getQuizById(quizId) || null
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error(`Failed to fetch quiz ${quizId}:`, error)
+    return null
+  }
 }
 
 // Generate metadata for SEO

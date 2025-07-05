@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   keywords: "quiz, education, learning, test, knowledge, history, science, math, programming",
   authors: [{ name: "Micro-Quiz Platform" }],
   viewport: "width=device-width, initial-scale=1",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
